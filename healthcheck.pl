@@ -19,6 +19,8 @@ for my $disk (sort keys %SMART_status) {
     $pretty_disk_status .= '<li>';
     if ($SMART_status{$disk} eq 'good') {
         $pretty_disk_status .= "$disk is good.";
+    } elsif ($SMART_status{$disk} eq 'virtual') {
+        $pretty_disk_status .= "$disk looks like a virtual disk, ignoring...";
     } else {
         $pretty_disk_status .= "$disk has an issue: $SMART_status{$disk}.";
         $status = 'ERROR';

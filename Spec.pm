@@ -8,7 +8,16 @@ use version; our $VERSION = qv('1.0');
 sub cpu {
     my $cpu = `cat /proc/cpuinfo`;
     my ($manufacturer, $family, $model, $cores, $freq);
-    if ($cpu =~ m/^model name.*Intel\(R\) (.*)\(/m) {
+    my $hypervisor = `/bin/dmesg | /bin/grep "Hypervisor detected"`;
+    $hypervisor =~ /Hypervisor detected: (.*)/;
+    $hypervisor = $1;
+    if ($hypervisor eq 'KVM') {
+        require Spec::CPU::QEMU;
+        $manufacturer = 'Virtual';
+        $model = undef;
+        $cores = Spec::CPU::QEMU::getcores($cpu);
+        $freq = Spec::CPU::QEMU::getfreq($cpu);
+    } elsif ($cpu =~ m/^model name.*Intel\(R\) (.*)\(/m) {
         require Spec::CPU::Intel;
         Spec::CPU::Intel->import;
         $manufacturer = 'Intel';
@@ -27,7 +36,11 @@ sub cpu {
     } else {
         return 'No processor detected from /proc/cpuinfo';
     }
-    return "$manufacturer $model ${cores}x${freq}";
+    my $name = $manufacturer;
+    if (defined $model) {
+        $name += " $model";
+    }
+    return "$name ${cores}x${freq}";
 }
 
 sub memory {
