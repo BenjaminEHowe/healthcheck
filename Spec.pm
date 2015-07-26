@@ -11,7 +11,7 @@ sub cpu {
     my $hypervisor = `/bin/dmesg | /bin/grep "Hypervisor detected"`;
     $hypervisor =~ /Hypervisor detected: (.*)/;
     $hypervisor = $1;
-    if ($hypervisor eq 'KVM') {
+    if (defined $hypervisor && $hypervisor eq 'KVM') {
         require Spec::CPU::QEMU;
         $manufacturer = 'Virtual';
         $model = undef;
@@ -38,7 +38,7 @@ sub cpu {
     }
     my $name = $manufacturer;
     if (defined $model) {
-        $name += " $model";
+        $name .= " $model";
     }
     return "$name ${cores}x${freq}";
 }
