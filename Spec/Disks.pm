@@ -7,19 +7,14 @@ use version; our $VERSION = qv('1.0');
 
 sub type {
     my $disk = $_[0];
-    my $SMART = `/usr/sbin/smartctl -i $disk`;
     my ($capacity, $media);
-    if ($SMART =~ /User Capacity:.*\[(.*?) (.B)\]/) {
-        $capacity = (sprintf "%.0f", $1) . $2;
-    } else {
-        my $parted = `parted $disk print`;
-        if ($parted =~ /Disk .*: (.*)(.B)/) {
-            $capacity = (sprintf "%.0f", $1) . $2;
-        }
+    my $parted = `/sbin/parted $disk print`;
+    if ($parted =~ /Disk $disk: (.*)/) {
+        $capacity = $1;
     }
-    if ($SMART =~ /Device Model:.*SSD/ || $SMART =~ /Solid State Device/) {
+    if ($parted =~ /Model:.*INTEL/ || $parted =~ /Model:.* TS/) {
         $media = 'SSD';
-    } elsif ($SMART =~ /Device Model:.*QEMU/) {
+    } elsif ($parted =~ /Model:.*QEMU/ || $parted =~ /Model: Virtio/) {
         $media = 'Virtual';
     } else {
         $media = 'HDD';
@@ -28,12 +23,10 @@ sub type {
 }
 
 sub list {
-    my $diskscan = `/usr/sbin/smartctl --scan`;
+    my $diskscan = `/sbin/fdisk -l`;
     my @disks;
-    while ($diskscan =~ /([^\n]+)\n?/g) {
-        if ($1 =~ /(.*?) /) {
-            push @disks, $1;
-        }
+    while ($diskscan =~ /Disk (\/dev\/[hsv]d.*):/g) {
+        push @disks, $1;
     }
     return @disks;
 }

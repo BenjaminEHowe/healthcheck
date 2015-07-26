@@ -9,13 +9,17 @@ sub check {
     use Spec::Disks;
     my @disks = Spec::Disks::list();
     my %status;
+    my $parted;
     foreach my $disk (@disks) {
+        $parted = `/sbin/parted $disk print`;
+        if ($parted =~ /Model:.*QEMU/ || $parted =~ /Model: Virtio/) {
+            $status{$disk} = 'virtual';
+            next;
+        }
         unless (`/usr/sbin/smartctl -H $disk` =~ m/SMART overall-health self-assessment test result: PASSED/) {
             $status{$disk} = 'SMART self-assessment failed';
             next;
         }
-        my $SMART_attributes = `/usr/sbin/smartctl -A $disk`;
-        my ($capacity, $media) = Spec::Disks::type($disk);
         $status{$disk} = 'good';
     }
     return %status;
