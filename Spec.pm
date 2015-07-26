@@ -34,12 +34,13 @@ sub memory {
     my $mem = `cat /proc/meminfo`;
     my $unit;
     if ($mem =~ m/MemTotal:\s*(\d+)\s*kB/) {
-        $mem = sprintf "%.0f", $1 / (1024);
+        $mem = $1 / 1024;
         $unit = 'MB';
         if ($mem > 1024) {
             $mem /= 1024;
             $unit = 'GB';
         }
+        $mem = sprintf "%.0f", $mem;
     } else {
         warn "Couldn't work out how much memory this system has from /proc/meminfo :(\n";
         exit(1);
