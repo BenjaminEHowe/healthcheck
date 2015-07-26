@@ -17,7 +17,7 @@ sub type {
             $capacity = (sprintf "%.0f", $1) . $2;
         }
     }
-    if ($SMART =~ /Device Model:.*SSD/) {
+    if ($SMART =~ /Device Model:.*SSD/ || $SMART =~ /Solid State Device/) {
         $media = 'SSD';
     } elsif ($SMART =~ /Device Model:.*QEMU/) {
         $media = 'Virtual';
